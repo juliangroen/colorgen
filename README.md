@@ -1,1 +1,1 @@
-# react-tailwindcss-template
+# colorgen
