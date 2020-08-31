@@ -1,12 +1,12 @@
 import React from 'react';
-import './App.css';
+import FileUploader from './components/FileUploader';
 
 function App() {
-  return (
-    <div>
-        Hello, world!
-    </div>
-  );
+    return (
+        <div className="bg-indigo-100 fixed w-full h-full overflow-auto">
+            <FileUploader />
+        </div>
+    );
 }
 
 export default App;
