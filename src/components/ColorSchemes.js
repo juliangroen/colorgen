@@ -17,34 +17,33 @@ const ColorSchemes = ({ file }) => {
         return ['#', ...hexArray].join('');
     };
 
-    //const pSum1 = p1
-    //    .split(',')
-    //    .map(Number)
-    //    .reduce((sum, val) => sum + val);
+    const rgbToSum = (string) => {
+        const colorSum = string
+            .split(',')
+            .map(Number)
+            .reduce((sum, val) => sum + val);
+        return colorSum;
+    };
 
-    // filters out similar colors using a value tolerance
-    const filterColors = (colorArray, lightest, darkest) => {
-        const set = [...new Set(colorArray)];
-        const filteredColors = set.filter((p1) => {
-            const t = 16;
-            for (const p2 of set) {
-                if (
-                    (p2[0] > p1[0] + t || p2[0] < p1[0] - t) &&
-                    (p2[1] > p1[1] + t || p2[1] < p1[1] - t) &&
-                    (p2[2] > p1[2] + t || p2[2] < p1[2] - t)
-                ) {
-                    return p1;
+    const filterSection = (colorArray) => {
+        //const avg = colorArray.map((val) => rgbToSum(val)).reduce((sum, val) => sum + val); // / colorArray.length;
+        const filtered = colorArray.filter((val) => {
+            const sum = rgbToSum(val);
+            const t = 150;
+            for (const val2 of colorArray) {
+                const sum2 = rgbToSum(val2);
+                if (sum > sum2 + t || sum < sum2 - t) {
+                    return val;
                 }
             }
         });
-        return filteredColors;
+        return filtered;
     };
 
-    // selects darkest, lightest, and four distinct colors
-    const selectScheme = (colorArray) => {
-        let darkest = [];
+    // selects darkest and lightest colors.
+    const findLightestDarkest = (colorArray) => {
         let lightest = [];
-        let distinct = [];
+        let darkest = [];
 
         // find darkest and lightest
         for (const color of colorArray) {
@@ -64,8 +63,67 @@ const ColorSchemes = ({ file }) => {
                 }
             }
         }
-        console.log(darkest);
-        console.log(lightest);
+        return { lightest, darkest };
+    };
+
+    const filterColors = (colorArray) => {
+        const set = [...new Set(colorArray)];
+        //const filteredColors = set.filter((p1) => {
+        //    const t = 16;
+        //    for (const p2 of set) {
+        //        if (
+        //            (p2[0] > p1[0] + t || p2[0] < p1[0] - t) &&
+        //            (p2[1] > p1[1] + t || p2[1] < p1[1] - t) &&
+        //            (p2[2] > p1[2] + t || p2[2] < p1[2] - t)
+        //        ) {
+        //            return p1;
+        //        }
+        //    }
+        //});
+        // 511 - 765
+        const high = 765;
+        const highArray = [];
+        // 255 - 510
+        const mid = 510;
+        const midArray = [];
+        // 0 - 254
+        const low = 254;
+        const lowArray = [];
+
+        // divide colors into low/med/high
+        for (const color of colorArray) {
+            const colorSum = rgbToSum(color);
+
+            if (colorSum > mid && colorSum < high) {
+                highArray.push(color);
+            } else if (colorSum > low && colorSum < mid) {
+                midArray.push(color);
+            } else if (colorSum >= 64 && colorSum < low) {
+                lowArray.push(color);
+            }
+        }
+        const filteredHigh = filterSection(highArray);
+        const filteredMid = filterSection(midArray);
+        const filteredLow = filterSection(lowArray);
+
+        const combined = [...filteredHigh, ...filteredMid, ...filteredLow];
+        const { lightest, darkest } = findLightestDarkest(combined);
+
+        const filteredColors =
+            set.length <= 6
+                ? [...set]
+                : [
+                      lightest.join(','),
+                      filteredHigh[0],
+                      filteredHigh[filteredHigh.length - 1],
+                      filteredMid[0],
+                      filteredMid[filteredMid.length - 1],
+                      filteredLow[0],
+                      filteredLow[filteredLow.length - 1],
+                      darkest.join(','),
+                  ];
+
+        return filteredColors;
     };
 
     const generateColors = (image) => {
@@ -74,8 +132,8 @@ const ColorSchemes = ({ file }) => {
         const img = document.createElement('img');
         img.src = window.URL.createObjectURL(image);
         img.onload = () => {
-            canvas.width = 32;
-            canvas.height = 32;
+            canvas.width = 64;
+            canvas.height = 64;
             ctx.drawImage(img, 0, 0, img.width, img.height, 0, 0, canvas.width, canvas.height);
             const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
             let holder = [];
@@ -91,18 +149,9 @@ const ColorSchemes = ({ file }) => {
                 }
             });
             const filteredColors = filterColors(pixelColors);
-            //selectScheme(filteredColors);
-            selectScheme(pixelColors);
+            console.log(filteredColors);
             const hexArray = filteredColors.map((value) => rgbToHex(value));
             setColors(hexArray);
-            console.log(filteredColors);
-            // for (const pixel of colorsSet) {
-            //     const values = pixel.split(',');
-            //     for (const pixel2 of colorsSet) {
-
-            //     }
-            // }
-            setColors(pixelColors);
         };
     };
 
@@ -116,7 +165,7 @@ const ColorSchemes = ({ file }) => {
             <div className="flex flex-wrap max-w-lg">
                 {colors &&
                     colors.map((color, index) => {
-                        return <div key={index} className="w-4 h-4" style={{ background: color }}></div>;
+                        return <div key={index} className="w-16 h-64" style={{ background: color }}></div>;
                     })}
             </div>
         </div>
