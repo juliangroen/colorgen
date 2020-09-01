@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import FileUploader from './components/FileUploader';
-import ColorScheme from './components/ColorScheme';
+import ColorSchemes from './components/ColorSchemes';
 
 function App() {
     const [file, setFile] = useState(null);
@@ -12,7 +12,7 @@ function App() {
         <div className="bg-indigo-100 fixed w-full h-full overflow-auto">
             {file && file.type}
             <FileUploader onChange={changeHandler} />
-            <ColorScheme file={file} />
+            <ColorSchemes file={file} />
         </div>
     );
 }
