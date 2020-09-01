@@ -1,10 +1,21 @@
-import React, { useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 
 const ColorScheme = ({ file }) => {
+    const [colors, setColors] = useState(null);
+
     const combinePixels = (pixels) => {
-        const combined = [];
+        const combined = pixels.map((pixel) => {
+            const rgbArray = pixel.split(',');
+            rgbArray.pop();
+            const hexArray = rgbArray.map((value) => {
+                const hex = parseInt(value).toString(16);
+                return hex.length === 1 ? `0${hex}` : hex;
+            });
+            return ['#', ...hexArray].join('');
+        });
         return combined;
     };
+
     const generateColors = (file) => {
         const canvas = document.querySelector('canvas');
         const ctx = canvas.getContext('2d');
@@ -26,7 +37,7 @@ const ColorScheme = ({ file }) => {
                     holder.push(value);
                 }
             });
-            console.log(pixels);
+            setColors(combinePixels(pixels));
         };
     };
 
@@ -37,6 +48,12 @@ const ColorScheme = ({ file }) => {
     return (
         <div>
             <canvas>HTML5 canvas not supported in your browser.</canvas>
+            <div className="flex flex-wrap max-w-xl">
+                {colors &&
+                    colors.map((color, index) => {
+                        return <div key={index} className="w-4 h-4" style={{ background: color }}></div>;
+                    })}
+            </div>
         </div>
     );
 };
